@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Team Log | Pokémon playthrough tracker</title>
+  <meta name="description" content="Track each Pokémon playthrough: your final six, the moves they used, and your notes.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M4 32a28 28 0 0 1 56 0Z' fill='%23ee1515'/%3E%3Cpath d='M4 32a28 28 0 0 0 56 0Z' fill='%23ffffff'/%3E%3Ccircle cx='32' cy='32' r='28' fill='none' stroke='%231a1a1a' stroke-width='5'/%3E%3Cline x1='4' y1='32' x2='60' y2='32' stroke='%231a1a1a' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23ffffff' stroke='%231a1a1a' stroke-width='4.5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <!-- LOGIN SCREEN -->
+  <div id="auth-screen" class="auth-screen" hidden>
+    <div class="auth-card">
+      <div class="pokeball-icon" aria-hidden="true"></div>
+      <h1>Team Log</h1>
+      <p class="auth-tagline">Your teams, saved in the cloud</p>
+
+      <form id="auth-form">
+        <div class="field">
+          <label for="auth-email">Email</label>
+          <input id="auth-email" type="email" required autocomplete="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="auth-password">Password</label>
+          <input id="auth-password" type="password" required minlength="6" autocomplete="current-password" placeholder="At least 6 characters">
+        </div>
+        <div class="auth-buttons">
+          <button type="submit" id="login-btn">Log in</button>
+          <button type="button" id="signup-btn" class="ghost">Create account</button>
+        </div>
+        <p id="auth-status" role="status"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app" hidden>
+    <header class="top">
+      <div class="header-inner">
+        <div class="header-row">
+          <div class="brand">
+            <div class="pokeball-icon" aria-hidden="true"></div>
+            <div>
+              <h1>Team Log</h1>
+              <p>Track each playthrough: your final six, the moves they used, and your notes.</p>
+            </div>
+          </div>
+          <div class="user-area">
+            <span id="user-email" class="user-email"></span>
+            <button type="button" id="logout-btn" class="ghost">Log out</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- POKÉBALL CENTER BELT & BUTTON DIVIDER -->
+    <div class="pokeball-divider" aria-hidden="true">
+      <div class="pokeball-center-btn"></div>
+    </div>
+
+    <main id="main">
+      <section aria-labelledby="runs-title">
+        <h2 id="runs-title">Playthroughs</h2>
+
+        <form id="run-form">
+          <div class="field">
+            <label for="game">Game</label>
+            <select id="game" name="game" required>
+              <option value="">Choose a game</option>
+              <optgroup label="Gen 1 (Kanto)" data-gen="1">
+                <option>Red</option>
+                <option>Blue</option>
+                <option>Yellow</option>
+              </optgroup>
+              <optgroup label="Gen 2 (Johto)" data-gen="2">
+                <option>Gold</option>
+                <option>Silver</option>
+                <option>Crystal</option>
+              </optgroup>
+              <optgroup label="Gen 3 (Hoenn)" data-gen="3">
+                <option>Ruby</option>
+                <option>Sapphire</option>
+                <option>Emerald</option>
+                <option>FireRed</option>
+                <option>LeafGreen</option>
+              </optgroup>
+              <optgroup label="Gen 4 (Sinnoh)" data-gen="4">
+                <option>Diamond</option>
+                <option>Pearl</option>
+                <option>Platinum</option>
+                <option>HeartGold</option>
+                <option>SoulSilver</option>
+              </optgroup>
+              <optgroup label="Gen 5 (Unova)" data-gen="5">
+                <option>Black</option>
+                <option>White</option>
+                <option>Black 2</option>
+                <option>White 2</option>
+              </optgroup>
+              <optgroup label="Gen 6 (Kalos)" data-gen="6">
+                <option>X</option>
+                <option>Y</option>
+                <option>Omega Ruby</option>
+                <option>Alpha Sapphire</option>
+              </optgroup>
+              <optgroup label="Gen 7 (Alola and Let’s Go)" data-gen="7">
+                <option>Sun</option>
+                <option>Moon</option>
+                <option>Ultra Sun</option>
+                <option>Ultra Moon</option>
+                <option>Let’s Go Pikachu</option>
+                <option>Let’s Go Eevee</option>
+              </optgroup>
+              <optgroup label="Gen 8 (Galar, Sinnoh, Hisui)" data-gen="8">
+                <option>Sword</option>
+                <option>Shield</option>
+                <option>Brilliant Diamond</option>
+                <option>Shining Pearl</option>
+                <option>Legends: Arceus</option>
+              </optgroup>
+              <optgroup label="Gen 9 (Paldea and Kalos)" data-gen="9">
+                <option>Scarlet</option>
+                <option>Violet</option>
+                <option>Legends: Z-A</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="run-name">Playthrough name (optional)</label>
+            <input id="run-name" name="run-name" type="text" maxlength="60" placeholder="e.g. Nuzlocke, or Mono-water">
+          </div>
+
+          <button type="submit">Start playthrough</button>
+          <p id="run-status" role="status"></p>
+        </form>
+
+        <p id="runs-empty">No playthroughs yet. Start one above.</p>
+        <ul id="run-list" class="run-list"></ul>
+      </section>
+
+      <section aria-labelledby="team-title">
+        <h2 id="team-title">Your team</h2>
+        <p id="team-help">Start or choose a playthrough, then add up to six Pokémon.</p>
+
+        <ol id="team" class="team">
+          <li class="slot"><p>Slot 1: empty</p></li>
+          <li class="slot"><p>Slot 2: empty</p></li>
+          <li class="slot"><p>Slot 3: empty</p></li>
+          <li class="slot"><p>Slot 4: empty</p></li>
+          <li class="slot"><p>Slot 5: empty</p></li>
+          <li class="slot"><p>Slot 6: empty</p></li>
+        </ol>
+
+        <div class="field">
+          <label for="run-notes">Playthrough notes</label>
+          <textarea id="run-notes" rows="4" maxlength="2000" disabled></textarea>
+        </div>
+        <p id="team-status" role="status"></p>
+      </section>
+
+      <section aria-labelledby="dex-title">
+        <h2 id="dex-title">Pokémon</h2>
+
+        <div id="gens" class="gens" role="group" aria-label="Generation">
+          <button type="button" data-gen="1" aria-pressed="true">Gen 1 <span>Kanto</span></button>
+          <button type="button" data-gen="2" aria-pressed="false">Gen 2 <span>Johto</span></button>
+          <button type="button" data-gen="3" aria-pressed="false">Gen 3 <span>Hoenn</span></button>
+          <button type="button" data-gen="4" aria-pressed="false">Gen 4 <span>Sinnoh</span></button>
+          <button type="button" data-gen="5" aria-pressed="false">Gen 5 <span>Unova</span></button>
+          <button type="button" data-gen="6" aria-pressed="false">Gen 6 <span>Kalos</span></button>
+          <button type="button" data-gen="7" aria-pressed="false">Gen 7 <span>Alola</span></button>
+          <button type="button" data-gen="8" aria-pressed="false">Gen 8 <span>Galar</span></button>
+          <button type="button" data-gen="9" aria-pressed="false">Gen 9 <span>Paldea</span></button>
+        </div>
+
+        <div class="field">
+          <label for="dex-search">Search this generation</label>
+          <input id="dex-search" type="search" placeholder="e.g. Charizard" autocomplete="off">
+        </div>
+
+        <p id="dex-status" role="status">Pokémon will appear here once the data loads.</p>
+        <ul id="dex" class="dex"></ul>
+      </section>
+
+      <section aria-labelledby="progress-title">
+        <h2 id="progress-title">Progress by generation</h2>
+        <table class="progress">
+          <caption>Playthroughs you have started, and how many have a full team of six.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Generation</th>
+              <th scope="col">Started</th>
+              <th scope="col">Full teams</th>
+            </tr>
+          </thead>
+          <tbody id="progress-body"></tbody>
+        </table>
+      </section>
+
+      <section aria-labelledby="backup-title">
+        <h2 id="backup-title">Backup</h2>
+        <p>Your data is saved in the cloud. You can still export a local copy as extra safety.</p>
+        <button type="button" id="export">Export backup</button>
+        <div class="field">
+          <label for="import">Import a backup file</label>
+          <input id="import" type="file" accept="application/json,.json">
+        </div>
+        <p id="backup-status" role="status"></p>
+      </section>
+    </main>
+
+    <footer>
+      <p>Pokémon data and sprites from PokéAPI. Pokémon and its character names are trademarks of Nintendo, Game Freak and The Pokémon Company. This fan-made tracker is not affiliated with or endorsed by them.</p>
+    </footer>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
